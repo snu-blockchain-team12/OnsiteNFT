@@ -27,7 +27,7 @@ product = [\
 
 def CORS_response(response):
     new_response = response
-    new_response.headers.add('Access-Control-Allow-Origin', 'http://127.0.0.1:3000')
+    new_response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
     new_response.headers.add('Access-Control-Allow-Credentials', 'true')
     return new_response
 
@@ -123,3 +123,6 @@ def main():
     if user == None:
         return CORS_response(redirect(url_for("login")))
     return CORS_response(redirect(url_for("index")))
+
+if __name__ == '__main__':
+    app.run(host="0.0.0.0",port=80, debug=False)
