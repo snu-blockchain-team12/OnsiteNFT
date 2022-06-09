@@ -6,28 +6,60 @@ import sys
 app = Flask(__name__)
 CORS(app, resources={r"*": {"origins": "*"}}, supports_credentials=True)
 
-product_key = ['title','content', 'price', 'link']
-product = [\
-        ["Test Title1", "Test Content1", "0.01", "1.avi"],\
-        ["Test Title2", "Test Content2", "0.02", "2.avi"],\
-        ["Test Title3", "Test Content3", "0.02", "3.avi"],\
-        ["Test Title4", "Test Content4", "0.02", "4.png"],\
-        ["Test Title5", "Test Content5", "0.02", "5.avi"],\
-        ["Test Title6", "Test Content3", "0.02", "6.avi"],\
-        ["Test Title7", "Test Content4", "0.02", "7.png"],\
-        ["Test Title8", "Test Content5", "0.02", "8.png"],\
-        ["Test Title9", "no image content", "0.00", "8"],\
-        ["Test Title8", "Test Content5", "0.02", "8.png"],\
-        ["Test Title8", "Test Content5", "0.02", "8.png"],\
-        ["Test Title8", "Test Content5", "0.02", "8.png"],\
-        ["Test Title8", "Test Content5", "0.02", "8.png"],\
-        ["Test Title8", "Test Content5", "0.02", "8.png"],\
-        ["Test Title8", "Test Content5", "0.02", "8.png"],\
-        ]
+def read_db():
+    db = open('db.txt', 'r')
+    lines = db.readlines()
+    product = []
+    for l in lines:
+        temp_l = l.strip().split(';')
+        product.append(temp_l)
+    return product
+
+def write_db(product):
+    with open('db.txt','w+') as f:
+        for p in product:
+            str = ''
+            for item in p:
+                str += item + ";"
+            str = str[0:-1]
+            str += '\n'
+            f.write(str)
+
+product_key = ['id', 'title',  'content', 'price', 'link', 'owner']
+product = read_db()
+
+def dict_product(id):
+    p = {
+        product_key[0] : product[id][0],
+        product_key[1] : product[id][1],
+        product_key[2] : product[id][2],
+        product_key[3] : product[id][3],
+        product_key[4] : product[id][4],
+        product_key[5] : product[id][5],
+    }
+    return p
+
+def dict_products(user=None):
+    ps = { "products" : []}
+    for raw_product in product:
+        p = {
+            product_key[0] : raw_product[0],
+            product_key[1] : raw_product[1],
+            product_key[2] : raw_product[2],
+            product_key[3] : raw_product[3],
+            product_key[4] : raw_product[4],
+            product_key[5] : raw_product[5],
+        }
+        if user == None:
+            ps["products"].append(p)
+        elif raw_product[5] == user:
+            ps["products"].append(p)
+
+    return ps
 
 def CORS_response(response):
     new_response = response
-    new_response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
+    new_response.headers.add('Access-Control-Allow-Origin', '*')
     new_response.headers.add('Access-Control-Allow-Credentials', 'true')
     return new_response
 
@@ -89,40 +121,65 @@ def login_post():
 def login(name=None):
     return render_template('login.html', name=name)
 
+@app.route("/products")
+def products():
+    try:
+        user = request.args.get('user')
+    except:
+        user = None
+
+    #     return abort(403)
+    resp = jsonify(dict_products(user))
+    
+    return resp
+
 @app.route("/index")
 def index():
     user = request.cookies.get('user')
     if user == None:
         return redirect(url_for("login"))
-    return render_template("index.html", user=user, product=product)    
+    return render_template("index.html", user=user, product=product)
 
-@app.route("/products")
-def products():
-    user = request.cookies.get('user')
-    print(request.cookies)
+@app.route("/buy/<id>", methods=['GET', 'POST'])
+def buy(id):
+    try:
+        user = request.json['user']
+    except:
+        pass
+    if user == None:
+        return redirect(url_for("login"))
 
-    # client에서 cookie 전송이 안되어 임시로 모든 접근 허용
-    # if user == None:
-    #     return abort(403)
-    resp_json = { "products" : []}
-    for raw_product in product:
-        p = {
-            product_key[0] : raw_product[0],
-            product_key[1] : raw_product[1],
-            product_key[2] : raw_product[2],
-            product_key[3] : raw_product[3],
-        }
-        resp_json["products"].append(p)
-    resp = resp_json
-    
-    return resp
+    try:
+        account = request.json['account']
+    except:
+        pass
+    if account == None:
+        return "metamask account required"
+
+    idx = 0
+    for i, p in enumerate(product):
+        if int(p[0]) == int(id):
+            idx = i
+    print(idx)
+    print(request.json)
+
+    nft_link = product[idx][4]
+    account = request.json['user']
+
+    # import buy_nft from '../../trade' 포함
+    #   nft_link : 이미지 url (db.txt에 기록)
+    #   account : etherium 지갑 주소
+    # buy_nft(nft_link, account)
+
+    product[idx][5] = user
+    write_db(product)
+    return jsonify(dict_product(idx))
 
 @app.route("/")
 def main():
     user = request.cookies.get('user')
-    if user == None:
-        return CORS_response(redirect(url_for("login")))
     return CORS_response(redirect(url_for("index")))
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0",port=80, debug=False)
+

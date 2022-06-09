@@ -1,0 +1,3 @@
+1;작품 1;작품 1입니다.;0.01;https://upload.wikimedia.org/wikipedia/en/7/70/Campbell%27s_Tomato_Juice_Box._1964._Synthetic_polymer_paint_and_silkscreen_ink_on_wood.jpg;user
+2;작품 2;작품 1입니다.;0.01;https://upload.wikimedia.org/wikipedia/en/7/70/Campbell%27s_Tomato_Juice_Box._1964._Synthetic_polymer_paint_and_silkscreen_ink_on_wood.jpg;user
+3;작품 3;작품 1입니다.;0.02;https://upload.wikimedia.org/wikipedia/en/7/70/Campbell%27s_Tomato_Juice_Box._1964._Synthetic_polymer_paint_and_silkscreen_ink_on_wood.jpg;user
